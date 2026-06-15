@@ -1,0 +1,102 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = "https://maven.minecraftforge.net/" }
+        maven { url = "https://repo.spongepowered.org/maven" }
+        maven { url = "https://cursemaven.com" }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:5.1.+'
+        classpath 'org.spongepowered:mixingradle:0.7.+'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
+
+version = '1.16.1'
+group = 'sheg1_steparm'
+archivesBaseName = 'AquaAcrobaticsUnofficial'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+minecraft {
+    mappings channel: 'stable', version: '39-1.12'
+    
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.mojanglevels', 'info'
+            mods {
+                aquaacrobaticsunofficial {
+                    source sourceSets.main
+                }
+            }
+        }
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.mojanglevels', 'info'
+            mods {
+                aquaacrobaticsunofficial {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = "https://repo.spongepowered.org/maven" }
+    maven { url = "https://cursemaven.com" }
+    maven { url = "https://maven.mcmoddev.com/" }
+    maven { url = "https://dvs1.progwml6.com/files/maven" }
+    maven { url = "https://maven.cil.li/" }
+    maven { url = "https://maven.gtceu.com/" }
+    mavenLocal()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    compileOnly 'org.spongepowered:mixin:0.8.5'
+    
+    compileOnly files('libs/Galacticraft-1.12.2-4.0.7.jar')
+    compileOnly files('libs/appliedenergistics2-rv6-stable-7.jar')
+    compileOnly files('libs/WitcheryResurrected-1.12.2-0.5.2.4.jar')
+    
+
+    compileOnly fg.deobf("curse.maven:journeymap-32274:2916002")
+    compileOnly fg.deobf("curse.maven:xaerosminimap-263420:3630494")
+    compileOnly fg.deobf("curse.maven:thaumcraft-223628:2629023")
+    compileOnly fg.deobf("curse.maven:artemislib-313590:2741812")
+    compileOnly fg.deobf("curse.maven:thebetweenlands-243363:3540287")
+    compileOnly fg.deobf("curse.maven:chiseledme-250075:3467731")
+    compileOnly fg.deobf("curse.maven:enderio-64578:3328811")
+    compileOnly fg.deobf("curse.maven:endercore-231868:2972849")
+    compileOnly fg.deobf("curse.maven:hats-229073:2960397")
+    compileOnly fg.deobf("curse.maven:ichunutil-229060:2801262")
+    compileOnly fg.deobf("curse.maven:mobends-231347:3573346")
+    compileOnly fg.deobf("curse.maven:morph-229080:2995522")
+    compileOnly fg.deobf("curse.maven:thaumicaugmentation-319441:3536155")
+    compileOnly fg.deobf("curse.maven:trinketsandbaubles-279900:3604719")
+    compileOnly fg.deobf("curse.maven:wings-302584:2829351")
+    compileOnly fg.deobf("curse.maven:baubles-227083:2518667")
+    compileOnly fg.deobf("curse.maven:mixinbooter-419286:4459218")
+}
+
+mixin {
+    add sourceSets.main, 'mixins.aquaacrobaticsunofficial.refmap.json'
+    config 'META-INF/mixins.aquaacrobaticsunofficial.json'
+}
+
+jar {
+    manifest {
+        attributes "FMLCorePlugin": "sheg1_steparm.aquaacrobaticsunofficial.core.AquaAcrobaticsCore"
+        attributes "FMLCorePluginContainsFMLMod": "true"
+        attributes "ForceLoadAsMod": "true"
+    }
+}
