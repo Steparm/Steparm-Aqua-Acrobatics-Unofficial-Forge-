@@ -1,0 +1,59 @@
+package sheg1_steparm.aquaacrobaticsunofficial.entity.player;
+
+import sheg1_steparm.aquaacrobaticsunofficial.entity.EntitySize;
+import sheg1_steparm.aquaacrobaticsunofficial.entity.Pose;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
+public interface IPlayerResizeable {
+
+    boolean canSwim();
+
+    void updateSwimming();
+
+    boolean getEyesInWaterPlayer();
+
+    float getWaterVision();
+
+    float getWidth();
+
+    float getHeight();
+
+    EntitySize getSize(Pose poseIn);
+
+    void recalculateSize();
+
+    boolean isResizingAllowed();
+
+    boolean isActuallySneaking();
+
+    float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn);
+
+    void setPose(Pose poseIn);
+
+    Pose getPose();
+
+    boolean isPoseClear(Pose poseIn);
+
+    boolean getShouldBeDead();
+
+    boolean isSwimming();
+
+    boolean isActuallySwimming();
+
+    @SideOnly(Side.CLIENT)
+    boolean isVisuallySwimming();
+
+    void setSwimming(boolean flag);
+
+    float getSwimAnimation(float partialTicks);
+
+    boolean canForceCrawling();
+
+    boolean isForcingCrawling();
+
+    void setForcingCrawling(boolean flag);
+
+    float getPlayerEyeHeight();
+
+}
