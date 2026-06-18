@@ -25,17 +25,6 @@ This mod is a direct backport of the new movement features added in modern versi
 
 ---
 
-## 🔗 Compatibility
-
-This mod has great compatibility with a wide range of popular mods, including:
-*   Mo' Bends
-*   Morph
-*   More Player Models
-*   Wings
-*   ArtemisLib
-
----
-
 ## 👥 Authors & Credits
 
 *   **Current Maintainer & Fork Author:** [SHEG1_Plus](https://www.curseforge.com/members/sheg1_plus)
