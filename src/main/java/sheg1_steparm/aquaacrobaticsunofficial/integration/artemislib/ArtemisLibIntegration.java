@@ -6,7 +6,7 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
-import sheg1_steparm.aquaacrobaticsunofficial.core.mixin.accessor.IEventBusAccessor;
+import sheg1_steparm.aquaacrobaticsunofficial.core.vanilla.accessor.IEventBusAccessor;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.Pose;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.player.IPlayerResizeable;
 

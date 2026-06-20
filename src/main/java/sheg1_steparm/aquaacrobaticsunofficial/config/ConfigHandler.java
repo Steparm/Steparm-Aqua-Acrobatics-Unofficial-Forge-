@@ -16,27 +16,22 @@ public class ConfigHandler {
     @Config.Comment({"STANDARD - The player will occasionally be pushed out of certain spaces. Collisions are evaluated for full cubes only, non-full cubes are ignored. This is the default behavior up to Minecraft 1.12.", "APPROXIMATE - The player can move into more spaces, but will still be pushed out of some. Collisions are evaluated for full cubes only, non-full cubes are ignored.", "EXACT - The player can move into all spaces as expected. Collisions are evaluated for all types of cubes. This is the default behavior in Minecraft 1.13 and onwards."})
     public static PlayerBlockCollisions playerBlockCollisions = PlayerBlockCollisions.APPROXIMATE;
 
-    @SuppressWarnings("unused")
-    @Config.Name("blocks")
+    @Config.Name("Blocks")
     @Config.Comment("Block-related config options (must match server).")
     public static BlocksConfig BLOCKS_CONFIG = new BlocksConfig();
 
-    @SuppressWarnings("unused")
-    @Config.Name("movement")
+    @Config.Name("Movement")
     @Config.Comment("Movement related config options.")
     public static MovementConfig MOVEMENT_CONFIG = new MovementConfig();
 
-    @SuppressWarnings("unused")
-    @Config.Name("miscellaneous")
+    @Config.Name("Miscellaneous")
     @Config.Comment("Config options for various features of the mod.")
     public static MiscellaneousConfig MISCELLANEOUS_CONFIG = new MiscellaneousConfig();
 
-    @SuppressWarnings("unused")
-    @Config.Name("integration")
+    @Config.Name("Integration")
     @Config.Comment("Control compatibility settings for individual mods.")
     public static IntegrationConfig INTEGRATION_CONFIG = new IntegrationConfig();
 
-    @SuppressWarnings("unused")
     @SubscribeEvent
     public static void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent evt) {
         if (evt.getModID().equals(Tags.MOD_ID)) {
@@ -46,7 +41,6 @@ public class ConfigHandler {
         FogHandler.recomputeBlacklist();
     }
 
-    @SuppressWarnings("unused")
     public enum PlayerBlockCollisions {
         STANDARD, APPROXIMATE, EXACT
     }
