@@ -9,20 +9,21 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.player.IPlayerResizeable;
 
 public class PacketSendKey implements IMessage {
-    public enum KeybindPacket {
-        UNKNOWN,
-        TOGGLE_CRAWLING
+    private KeybindPacket keybind = KeybindPacket.UNKNOWN;
+
+    public PacketSendKey() {
     }
 
-    private KeybindPacket keybind = KeybindPacket.UNKNOWN;
+    public PacketSendKey(KeybindPacket keybind) {
+        this.keybind = keybind;
+    }
 
     @Override
     public void fromBytes(ByteBuf buf) {
         int idx = buf.readInt();
         if (idx >= KeybindPacket.values().length) {
             keybind = KeybindPacket.UNKNOWN;
-        }
-        else {
+        } else {
             keybind = KeybindPacket.values()[idx];
         }
     }
@@ -32,11 +33,9 @@ public class PacketSendKey implements IMessage {
         buf.writeInt(keybind.ordinal());
     }
 
-    public PacketSendKey() {
-    }
-
-    public PacketSendKey(KeybindPacket keybind) {
-        this.keybind = keybind;
+    public enum KeybindPacket {
+        UNKNOWN,
+        TOGGLE_CRAWLING
     }
 
     public static class Handler implements IMessageHandler<PacketSendKey, IMessage> {

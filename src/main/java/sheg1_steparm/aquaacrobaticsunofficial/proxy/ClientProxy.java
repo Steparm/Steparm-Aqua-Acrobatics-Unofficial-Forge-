@@ -26,6 +26,11 @@ import sheg1_steparm.aquaacrobaticsunofficial.client.handler.FogHandler;
 import sheg1_steparm.aquaacrobaticsunofficial.client.model.WaterResourcePack;
 import sheg1_steparm.aquaacrobaticsunofficial.config.ConfigHandler;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.player.IPlayerResizeable;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.IntegrationManager;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.artemislib.ArtemisLibIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.enderio.EnderIOIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.mobends.MoBendsIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.thaumicaugmentation.ThaumicAugmentationIntegration;
 import sheg1_steparm.aquaacrobaticsunofficial.network.NetworkHandler;
 import sheg1_steparm.aquaacrobaticsunofficial.network.message.PacketSendKey;
 import sheg1_steparm.aquaacrobaticsunofficial.optifine.OptifineHelper;
@@ -35,6 +40,38 @@ import java.util.List;
 
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class ClientProxy extends CommonProxy {
+    @SubscribeEvent
+    public static void registerModels(ModelRegistryEvent event) {
+        if (ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns) {
+            ModelLoader.setCustomStateMapper(CommonProxy.BUBBLE_COLUMN, new StateMap.Builder().ignore(BlockLiquid.LEVEL, BlockBubbleColumn.DRAG).build());
+        }
+    }
+
+    @SubscribeEvent
+    public static void registerTextures(TextureStitchEvent.Pre event) {
+        if (ConfigHandler.BLOCKS_CONFIG.newWaterColors) {
+            TextureMap map = event.getMap();
+            /* Register the custom 1.13-style texture used by most in-world renderers */
+            map.registerSprite(new ResourceLocation("aquaacrobaticsunofficial:blocks/water_still"));
+            map.registerSprite(new ResourceLocation("aquaacrobaticsunofficial:blocks/water_flow"));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onKeyPress(InputEvent.KeyInputEvent event) {
+        // null check for hot reload
+        if (ConfigHandler.MOVEMENT_CONFIG.enableToggleCrawling && Keybindings.forceCrawling != null && Keybindings.forceCrawling.isPressed()) {
+            IPlayerResizeable player = (IPlayerResizeable) Minecraft.getMinecraft().player;
+            if (player != null) {
+                if (player.aquaAcrobatics$canForceCrawling())
+                    NetworkHandler.INSTANCE.sendToServer(new PacketSendKey(PacketSendKey.KeybindPacket.TOGGLE_CRAWLING));
+                else {
+                    ((EntityPlayerSP) player).sendMessage(new TextComponentTranslation("chat.aquaacrobatics.cannot_toggle_crawling"));
+                }
+            }
+        }
+    }
+
     @Override
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
@@ -49,7 +86,6 @@ public class ClientProxy extends CommonProxy {
         }
     }
 
-
     @Override
     public void init() {
         Keybindings.register();
@@ -62,39 +98,25 @@ public class ClientProxy extends CommonProxy {
         }
     }
 
-    @SubscribeEvent
-    public static void registerModels(ModelRegistryEvent event) {
-        if (ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns) {
-            ModelLoader.setCustomStateMapper(CommonProxy.BUBBLE_COLUMN, new StateMap.Builder().ignore(BlockLiquid.LEVEL, BlockBubbleColumn.DRAG).build());
-        }
-    }
-
-    @SubscribeEvent
-    public static void registerTextures(TextureStitchEvent.Pre event) {
-        if (ConfigHandler.BLOCKS_CONFIG.newWaterColors) {
-            TextureMap map = event.getMap();
-            map.registerSprite(new ResourceLocation("aquaacrobaticsunofficial:blocks/water_still"));
-            map.registerSprite(new ResourceLocation("aquaacrobaticsunofficial:blocks/water_flow"));
-        }
-    }
-
-    @SubscribeEvent
-    public static void onKeyPress(InputEvent.KeyInputEvent event) {
-        if (ConfigHandler.MOVEMENT_CONFIG.enableToggleCrawling && Keybindings.forceCrawling.isPressed()) {
-            IPlayerResizeable player = (IPlayerResizeable) Minecraft.getMinecraft().player;
-            if (player != null) {
-                if (player.aquaAcrobatics$canForceCrawling())
-                    NetworkHandler.INSTANCE.sendToServer(new PacketSendKey(PacketSendKey.KeybindPacket.TOGGLE_CRAWLING));
-                else {
-                    ((EntityPlayerSP) player).sendMessage(new TextComponentTranslation("chat.aquaacrobatics.cannot_toggle_crawling"));
-                }
-            }
-        }
-    }
-
     @Override
     public void postInit() {
         super.postInit();
         FogHandler.recomputeBlacklist();
+
+        if (IntegrationManager.isMoBendsEnabled()) {
+            MoBendsIntegration.register();
+        }
+
+        if (IntegrationManager.isArtemisLibEnabled()) {
+            ArtemisLibIntegration.register();
+        }
+
+        if (IntegrationManager.isEnderIoEnabled()) {
+            EnderIOIntegration.register();
+        }
+
+        if (IntegrationManager.isThaumicAugmentationEnabled()) {
+            ThaumicAugmentationIntegration.register();
+        }
     }
 }

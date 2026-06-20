@@ -12,20 +12,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.Pose;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.player.IPlayerResizeable;
 
-@SuppressWarnings("unused")
 @Mixin(EntityPlayerMP.class)
 public abstract class EntityPlayerMPMixin extends EntityPlayer {
-
     public EntityPlayerMPMixin(World worldIn, GameProfile gameProfileIn) {
-
         super(worldIn, gameProfileIn);
     }
 
     @Inject(method = "onDeath", at = @At("TAIL"))
     public void onDeath(DamageSource cause, CallbackInfo callbackInfo) {
-
         // super method is never called where this is set in vanilla
         ((IPlayerResizeable) this).aquaAcrobatics$setPose(Pose.DYING);
     }
-
 }

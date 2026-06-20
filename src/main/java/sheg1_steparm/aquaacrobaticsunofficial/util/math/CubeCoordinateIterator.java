@@ -51,7 +51,6 @@ public class CubeCoordinateIterator {
 
     public int numBoundariesTouched() {
         int i = 0;
-
         if (this.x == 0 || this.x == this.xWidth - 1) {
             ++i;
         }

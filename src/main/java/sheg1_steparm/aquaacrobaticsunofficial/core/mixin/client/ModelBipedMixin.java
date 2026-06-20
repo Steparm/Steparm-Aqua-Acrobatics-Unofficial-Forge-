@@ -52,7 +52,6 @@ public abstract class ModelBipedMixin extends ModelBase implements IModelBipedSw
                 if (flag1) {
                     headPitch = this.aquaAcrobatics$rotLerpRad(this.aquaAcrobatics$swimAnimation, this.bipedHead.rotateAngleX, ((float) -Math.PI / 4F)) / 0.017453292F;
                 } else {
-
                     headPitch = this.aquaAcrobatics$rotLerpRad(this.aquaAcrobatics$swimAnimation, this.bipedHead.rotateAngleX, headPitch * ((float) Math.PI / 180F)) / 0.017453292F;
                 }
             }

@@ -36,6 +36,7 @@ public class WaterResourcePack extends AbstractResourcePack {
         return name.equals("pack.mcmeta") || CONTENTS_FILTER.contains(name);
     }
 
+    @Nonnull
     @Override
     public Set<String> getResourceDomains() {
         return ImmutableSet.of("minecraft");

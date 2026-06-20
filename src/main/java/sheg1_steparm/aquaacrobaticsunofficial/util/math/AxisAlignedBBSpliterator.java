@@ -25,8 +25,8 @@ public class AxisAlignedBBSpliterator extends Spliterators.AbstractSpliterator<A
     private final AxisAlignedBB aabb;
     private final CubeCoordinateIterator cubeCoordinateIterator;
     private final World reader;
-    private boolean isEntityPresent;
     private final BiPredicate<IBlockState, BlockPos> statePositionPredicate;
+    private boolean isEntityPresent;
 
     public AxisAlignedBBSpliterator(World reader, @Nullable Entity entity, AxisAlignedBB aabb) {
         this(reader, entity, aabb, (state, pos) -> true);
@@ -48,6 +48,14 @@ public class AxisAlignedBBSpliterator extends Spliterators.AbstractSpliterator<A
         this.cubeCoordinateIterator = new CubeCoordinateIterator(startX, startY, startZ, endX, heightY, endZ);
     }
 
+    public static boolean isBoundingBoxWithinBorder(WorldBorder worldBorder, AxisAlignedBB entityBoundingBox) {
+        double minX = MathHelper.floor(worldBorder.minX());
+        double minZ = MathHelper.floor(worldBorder.minZ());
+        double maxX = MathHelper.ceil(worldBorder.maxX());
+        double maxZ = MathHelper.ceil(worldBorder.maxZ());
+        return entityBoundingBox.minX > minX && entityBoundingBox.minX < maxX && entityBoundingBox.minZ > minZ && entityBoundingBox.minZ < maxZ && entityBoundingBox.maxX > minX && entityBoundingBox.maxX < maxX && entityBoundingBox.maxZ > minZ && entityBoundingBox.maxZ < maxZ;
+    }
+
     public boolean tryAdvance(Consumer<? super AxisAlignedBB> consumer) {
         return this.isEntityPresent && this.isEntityOutsideOfBorder(consumer) || this.isAABBColliding(consumer);
     }
@@ -61,27 +69,23 @@ public class AxisAlignedBBSpliterator extends Spliterators.AbstractSpliterator<A
 
             int boundariesTouched = this.cubeCoordinateIterator.numBoundariesTouched();
             if (boundariesTouched == 3) {
-
                 continue;
             }
 
             mutablePos.setPos(x, y, z);
             if (!this.reader.isBlockLoaded(mutablePos)) {
-
                 continue;
             }
 
             // piston check is new, not sure if it really helps in this version
             IBlockState blockstate = this.reader.getBlockState(mutablePos);
             if (!this.statePositionPredicate.test(blockstate, mutablePos) || boundariesTouched == 2 && blockstate.getBlock() != Blocks.PISTON_EXTENSION) {
-
                 continue;
             }
 
             // check full blocks first as they're easier to handle
             AxisAlignedBB collisionBoundingBox = blockstate.getCollisionBoundingBox(this.reader, mutablePos);
             if (collisionBoundingBox == Block.FULL_BLOCK_AABB && blockstate.isFullCube()) {
-
                 // second check probably not necessary
                 AxisAlignedBB aabbOffset = collisionBoundingBox.offset(x, y, z);
                 if (!this.aabb.intersects(aabbOffset) || this.entity != null && !this.entity.getEntityBoundingBox().intersects(aabbOffset)) {
@@ -112,7 +116,6 @@ public class AxisAlignedBBSpliterator extends Spliterators.AbstractSpliterator<A
         // only retain boxes colliding with both the area of interest and the current entity if present
         blockstate.addCollisionBoxToList(this.reader, mutablePos, this.aabb, collidingBoxes, this.entity, false);
         if (this.entity != null) {
-
             List<AxisAlignedBB> entityCollidingBoxes = Lists.newArrayList();
             blockstate.addCollisionBoxToList(this.reader, mutablePos, this.entity.getEntityBoundingBox(), entityCollidingBoxes, this.entity, false);
             collidingBoxes.retainAll(entityCollidingBoxes);
@@ -129,15 +132,6 @@ public class AxisAlignedBBSpliterator extends Spliterators.AbstractSpliterator<A
             consumer.accept(borderShape);
             return true;
         }
-
         return false;
-    }
-
-    public static boolean isBoundingBoxWithinBorder(WorldBorder worldBorder, AxisAlignedBB entityBoundingBox) {
-        double minX = MathHelper.floor(worldBorder.minX());
-        double minZ = MathHelper.floor(worldBorder.minZ());
-        double maxX = MathHelper.ceil(worldBorder.maxX());
-        double maxZ = MathHelper.ceil(worldBorder.maxZ());
-        return entityBoundingBox.minX > minX && entityBoundingBox.minX < maxX && entityBoundingBox.minZ > minZ && entityBoundingBox.minZ < maxZ && entityBoundingBox.maxX > minX && entityBoundingBox.maxX < maxX && entityBoundingBox.maxZ > minZ && entityBoundingBox.maxZ < maxZ;
     }
 }

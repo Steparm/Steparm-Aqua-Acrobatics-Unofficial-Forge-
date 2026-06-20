@@ -14,10 +14,12 @@ import sheg1_steparm.aquaacrobaticsunofficial.proxy.CommonProxy;
         modid = Tags.MOD_ID,
         name = Tags.MOD_NAME,
         version = Tags.VERSION,
-        dependencies = "required-after:mixinbooter"
+        acceptedMinecraftVersions = "[1.12.2]",
+        acceptableRemoteVersions = "*",
+        dependencies = "before:mobends@(0.24,);required-after:mixinbooter"
 )
 public class AquaAcrobatics {
-    public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);
+    public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_ID);
 
     @SuppressWarnings("unused")
     @SidedProxy(clientSide = "sheg1_steparm.aquaacrobaticsunofficial.proxy.ClientProxy", serverSide = "sheg1_steparm.aquaacrobaticsunofficial.proxy.CommonProxy")

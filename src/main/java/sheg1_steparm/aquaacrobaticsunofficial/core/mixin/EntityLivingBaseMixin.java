@@ -29,7 +29,7 @@ public abstract class EntityLivingBaseMixin extends Entity {
 
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;isSneaking()Z"))
     public boolean isSneaking(EntityLivingBase entity) {
-        // Make sneaking on ladders work again since removing the pose client-side prevents the actual mechanic from working
+        // make sneaking on ladders work again since removing the pose client-side prevents the actual mechanic from working
         if (entity instanceof IPlayerResizeable) {
             return ((IPlayerResizeable) entity).aquaAcrobatics$isActuallySneaking();
         }
@@ -73,8 +73,7 @@ public abstract class EntityLivingBaseMixin extends Entity {
     private boolean isJumpingOnLadder(EntityLivingBase instance) {
         if (ConfigHandler.MOVEMENT_CONFIG.newClimbingBehavior) {
             return instance.collidedHorizontally || ((EntityLivingBaseMixin) (Object) instance).aqua$isJumping();
-        }
-        else {
+        } else {
             return instance.collidedHorizontally;
         }
     }

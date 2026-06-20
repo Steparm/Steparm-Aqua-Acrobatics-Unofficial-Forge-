@@ -6,15 +6,15 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import sheg1_steparm.aquaacrobaticsunofficial.client.entity.IPlayerSPSwimming;
-import sheg1_steparm.aquaacrobaticsunofficial.entity.player.IPlayerResizeable;
 
+@SuppressWarnings("unused")
 @Mixin(PlayerControllerMP.class)
 public abstract class PlayerControllerMPMixin {
+
     @Redirect(method = "processRightClickBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isSneaking()Z"))
     public boolean isSneaking(EntityPlayerSP playerIn) {
-        if (((IPlayerResizeable) playerIn).aquaAcrobatics$isVisuallySwimming()) {
-            return false;
-        }
+
         return ((IPlayerSPSwimming) playerIn).aquaAcrobatics$isActuallySneaking();
     }
+
 }

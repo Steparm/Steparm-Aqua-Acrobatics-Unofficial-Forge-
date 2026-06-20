@@ -6,8 +6,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Random;
+
 public class UnderwaterGrassLikeHandler {
-    public static void handleUnderwaterGrassLikeBlock(World world, BlockPos pos, CallbackInfo ci) {
+    @SuppressWarnings("unused")
+    public static void handleUnderwaterGrassLikeBlock(World world, BlockPos pos, IBlockState state, Random rand, CallbackInfo ci) {
         if (world.isRemote || !world.isAreaLoaded(pos, 3)) {
             ci.cancel();
             return;

@@ -18,7 +18,7 @@ import java.util.Random;
 public abstract class BlockMyceliumMixin {
     @Inject(method = "updateTick", at = @At("HEAD"), cancellable = true)
     private void updateUnderwaterToDirt(World worldIn, BlockPos pos, IBlockState state, Random rand, CallbackInfo ci) {
-        UnderwaterGrassLikeHandler.handleUnderwaterGrassLikeBlock(worldIn, pos, ci);
+        UnderwaterGrassLikeHandler.handleUnderwaterGrassLikeBlock(worldIn, pos, state, rand, ci);
     }
 
     @Redirect(method = "updateTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;)Z", ordinal = 1), require = 0)

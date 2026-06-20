@@ -2,6 +2,7 @@ package sheg1_steparm.aquaacrobaticsunofficial.client.handler;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -32,11 +33,13 @@ import java.util.HashSet;
  * Some of the code in this class is based off of Minecraft 1.16.
  */
 public class FogHandler {
+    // Based on Minecraft 1.21.7
+    static final float FOG_END = 96.0F;
+    static final float FOG_START = -8.0F;
+    private static HashSet<String> worldProviderClassNames = null;
     private int targetFogColor = -1;
     private int prevFogColor = -1;
     private long fogAdjustTime = -1L;
-
-    private static HashSet<String> worldProviderClassNames = null;
 
     public static void recomputeBlacklist() {
         worldProviderClassNames = new HashSet<>();
@@ -59,6 +62,17 @@ public class FogHandler {
 
     @SubscribeEvent
     public void onRenderFogDensity(EntityViewRenderEvent.FogDensity event) {
+        switch (ConfigHandler.BLOCKS_CONFIG.waterFogMode) {
+            case AA_EXP2:
+                handleExp2Fog(event);
+                break;
+            case VANILLA_LINEAR:
+                handleLinearFog(event);
+                break;
+        }
+    }
+
+    private void handleExp2Fog(EntityViewRenderEvent.FogDensity event) {
         Entity eventEntity = event.getEntity();
         if (eventEntity instanceof EntityLivingBase && ((EntityLivingBase) eventEntity).isPotionActive(MobEffects.BLINDNESS)) {
             return;
@@ -79,6 +93,35 @@ public class FogHandler {
             event.setCanceled(true);
         }
     }
+
+    private void handleLinearFog(EntityViewRenderEvent.FogDensity event) {
+        Entity eventEntity = event.getEntity();
+        if (eventEntity instanceof EntityLivingBase && ((EntityLivingBase) eventEntity).isPotionActive(MobEffects.BLINDNESS)) {
+            return;
+        }
+
+        if (event.getState().getMaterial() == Material.WATER && shouldSkipFogOverride(eventEntity.getEntityWorld())) {
+            GlStateManager.setFog(GlStateManager.FogMode.LINEAR);
+
+            float renderDistanceInBlocks = Minecraft.getMinecraft().gameSettings.renderDistanceChunks * 16.0f;
+            float fogEnd = Math.min(renderDistanceInBlocks, FOG_END);
+
+            if (eventEntity instanceof EntityPlayer) {
+                EntityPlayer playerEntity = (EntityPlayer) eventEntity;
+                float waterVision = ((IPlayerResizeable) playerEntity).aquaAcrobatics$getWaterVision();
+                fogEnd *= Math.max(0.25F, waterVision);
+                Biome biome = playerEntity.world.getBiome(playerEntity.getPosition());
+                if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.SWAMP)) {
+                    fogEnd *= 0.85F;
+                }
+            }
+
+            GlStateManager.setFogStart(FOG_START);
+            GlStateManager.setFogEnd(fogEnd);
+            event.setCanceled(true);
+        }
+    }
+
 
     /* LOW to override mods like Biomes O' Plenty which force their own underwater fog color */
     @SubscribeEvent(priority = EventPriority.LOW)
@@ -125,7 +168,7 @@ public class FogHandler {
             if (playerEntity.isPotionActive(MobEffects.BLINDNESS)) {
                 int potionDuration = playerEntity.getActivePotionEffect(MobEffects.BLINDNESS).getDuration();
                 if (potionDuration < 20) {
-                    blindnessFactor *= (1.0F - (float) i / 20.0F);
+                    blindnessFactor *= (1.0F - (float) potionDuration / 20.0F);
                 } else {
                     blindnessFactor = 0.0D;
                 }

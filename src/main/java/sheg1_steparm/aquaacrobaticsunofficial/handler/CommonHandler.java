@@ -11,7 +11,7 @@ public class CommonHandler {
     public void onEntityConstructing(EntityEvent.EntityConstructing event) {
         if (event.getEntity() instanceof EntityBoat) {
             if (ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns) {
-                ((IRockableBoat) event.getEntity()).aqua$doRegisterData();
+                ((IRockableBoat) event.getEntity()).aquaAcrobatics$doRegisterData();
             }
         }
     }

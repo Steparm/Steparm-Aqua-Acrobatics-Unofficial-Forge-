@@ -16,8 +16,7 @@ public class ModelFluidMixin {
     private ResourceLocation aqua$getRealStill(Fluid fluid) {
         if (ConfigHandler.BLOCKS_CONFIG.newWaterColors && fluid == FluidRegistry.WATER) {
             return new ResourceLocation("aquaacrobaticsunofficial:blocks/water_still");
-        }
-        else {
+        } else {
             return fluid.getStill();
         }
     }
@@ -26,8 +25,7 @@ public class ModelFluidMixin {
     private ResourceLocation aqua$getRealFlowing(Fluid fluid) {
         if (ConfigHandler.BLOCKS_CONFIG.newWaterColors && fluid == FluidRegistry.WATER) {
             return new ResourceLocation("aquaacrobaticsunofficial:blocks/water_flow");
-        }
-        else {
+        } else {
             return fluid.getFlowing();
         }
     }

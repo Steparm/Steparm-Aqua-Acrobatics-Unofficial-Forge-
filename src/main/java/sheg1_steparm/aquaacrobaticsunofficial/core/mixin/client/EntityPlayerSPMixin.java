@@ -18,10 +18,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -31,6 +28,7 @@ import sheg1_steparm.aquaacrobaticsunofficial.client.entity.IPlayerSPSwimming;
 import sheg1_steparm.aquaacrobaticsunofficial.config.ConfigHandler;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.Pose;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.player.IPlayerResizeable;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.IntegrationManager;
 import sheg1_steparm.aquaacrobaticsunofficial.util.MovementInputStorage;
 import sheg1_steparm.aquaacrobaticsunofficial.util.math.AxisAlignedBBSpliterator;
 
@@ -39,22 +37,22 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@SuppressWarnings("unused")
 @Mixin(EntityPlayerSP.class)
 public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implements IPlayerSPSwimming {
+    @Unique
+    private final MovementInputStorage aquaAcrobatics$movementStorage = new MovementInputStorage();
     @Shadow
     @Final
     public NetHandlerPlayClient connection;
+    @Shadow
+    public MovementInput movementInput;
     @Shadow
     protected Minecraft mc;
     @Shadow
     protected int sprintToggleTimer;
     @Shadow
     private int autoJumpTime;
-    @Shadow
-    public MovementInput movementInput;
-
-    @Unique
-    private final MovementInputStorage aquaAcrobatics$movementStorage = new MovementInputStorage();
     @Unique
     private boolean aquaAcrobatics$isCrouching;
 
@@ -62,18 +60,26 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
         super(worldIn, playerProfile);
     }
 
+    @Unique
+    private static boolean aquaAcrobatics$isAxisAlignedBBNotClear(World world, @Nullable Entity entity, AxisAlignedBB aabb) {
+        return aquaAcrobatics$createAxisAlignedBBStream(world, entity, aabb).allMatch(Objects::isNull);
+    }
+
+    @Unique
+    private static Stream<AxisAlignedBB> aquaAcrobatics$createAxisAlignedBBStream(World world, @Nullable Entity entity, AxisAlignedBB aabb) {
+        return StreamSupport.stream(new AxisAlignedBBSpliterator(world, entity, aabb), false);
+    }
+
     @Redirect(method = "onUpdateWalkingPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isSneaking()Z"))
     private boolean onUpdateWalkingPlayerIsSneaking(EntityPlayerSP playerIn) {
+        // send actual sneak state to server
         return this.aquaAcrobatics$isActuallySneaking();
     }
 
     @Inject(method = "isSneaking", at = @At("HEAD"), cancellable = true)
     public void isSneaking(CallbackInfoReturnable<Boolean> callbackInfo) {
-        if (this.isOnLadder()) {
-            callbackInfo.setReturnValue(this.movementInput != null && this.movementInput.sneak);
-        } else {
-            callbackInfo.setReturnValue(this.aquaAcrobatics$isCrouching);
-        }
+        // don't check this directly every time to prevent crash with random things mod caused by loop
+        callbackInfo.setReturnValue(this.aquaAcrobatics$isCrouching);
     }
 
     @Override
@@ -85,6 +91,7 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
 
     @Override
     public boolean aquaAcrobatics$isActuallySneaking() {
+        // switched with #isSneaking
         return this.movementInput != null && this.movementInput.sneak;
     }
 
@@ -126,12 +133,13 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
 
     @Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
     protected void pushOutOfBlocks(double x, double y, double z, CallbackInfoReturnable<Boolean> callbackInfo) {
-        if (ConfigHandler.MOVEMENT_CONFIG.playerBlockCollisions != ConfigHandler.PlayerBlockCollisions.EXACT) {
+        if (ConfigHandler.playerBlockCollisions != ConfigHandler.PlayerBlockCollisions.EXACT) {
             return;
         }
         if (!this.noClip) {
             this.aquaAcrobatics$setPlayerOffsetMotion(x, z);
         }
+        // return value is never used
         callbackInfo.setReturnValue(false);
     }
 
@@ -170,24 +178,19 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
         double minY = this.getEntityBoundingBox().minY;
         double maxY = this.getEntityBoundingBox().maxY;
         AxisAlignedBB aabb = new AxisAlignedBB(pos.getX(), minY, pos.getZ(), pos.getX() + 1.0, maxY, pos.getZ() + 1.0);
+
+        // don't use IBlockState#causesSuffocation as it works differently in newer versions
         return !aquaAcrobatics$isAxisAlignedBBNotClear(this.world, this, aabb.shrink(1.0E-7));
     }
 
-    @Unique
-    private static boolean aquaAcrobatics$isAxisAlignedBBNotClear(World world, @Nullable Entity entity, AxisAlignedBB aabb) {
-        return aquaAcrobatics$createAxisAlignedBBStream(world, entity, aabb).allMatch(Objects::isNull);
-    }
-
-    @Unique
-    private static Stream<AxisAlignedBB> aquaAcrobatics$createAxisAlignedBBStream(World world, @Nullable Entity entity, AxisAlignedBB aabb) {
-        return StreamSupport.stream(new AxisAlignedBBSpliterator(world, entity, aabb), false);
-    }
-
-    @Redirect(method = {"pushOutOfBlocks", "localPushOutOfBlocks"}, at = @At(value = "INVOKE", target = "Ljava/lang/Math;ceil(D)D"))
+    @Dynamic
+    @Redirect(method = {"pushOutOfBlocks"}, at = @At(value = "INVOKE", target = "Ljava/lang/Math;ceil(D)D"))
     private double ceil(double a) {
-        if (ConfigHandler.MOVEMENT_CONFIG.playerBlockCollisions == ConfigHandler.PlayerBlockCollisions.APPROXIMATE) {
+        if (ConfigHandler.playerBlockCollisions == ConfigHandler.PlayerBlockCollisions.APPROXIMATE) {
             a -= 0.65;
         }
+
+        // make the player be able to sneak under full cubes with their new height of 1.5 blocks
         return Math.ceil(a);
     }
 
@@ -202,9 +205,11 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
 
     @Unique
     private void aquaAcrobatics$updateSprintToggleTimer() {
+        // added in 1.13+, so do this for the actual field
         if (this.movementInput.sneak) {
             this.sprintToggleTimer = 0;
         }
+
         this.aquaAcrobatics$movementStorage.sprintToggleTimer = this.sprintToggleTimer;
         if (this.aquaAcrobatics$movementStorage.sprintToggleTimer > 0) {
             --this.aquaAcrobatics$movementStorage.sprintToggleTimer;
@@ -226,14 +231,17 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
         return false;
     }
 
-    @Inject(method = {"onLivingUpdate", "localOnLivingUpdate"}, at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;wasFallFlying:Z", opcode = Opcodes.PUTFIELD))
+    @Dynamic
+    @Inject(method = {"onLivingUpdate"}, at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;wasFallFlying:Z", opcode = Opcodes.PUTFIELD))
     public void onLivingUpdate(CallbackInfo callbackInfo) {
         this.aquaAcrobatics$updatePlayerMoveState();
         this.aquaAcrobatics$isCrouching = this.aquaAcrobatics$isCrouching(!((IPlayerResizeable) this).aquaAcrobatics$isPoseClear(Pose.STANDING));
+        // handle sprinting behaviour
         this.setSprinting(this.aquaAcrobatics$movementStorage.isSprinting);
         boolean isSaturated = (float) this.getFoodStats().getFoodLevel() > 6.0F || this.capabilities.allowFlying;
         this.aquaAcrobatics$startSprinting(isSaturated);
         this.aquaAcrobatics$stopSprinting(isSaturated);
+        // handle misc movement
         this.aquaAcrobatics$handleElytraTakeoff();
         this.aquaAcrobatics$handleWaterSneaking();
         this.aquaAcrobatics$slowDownSneakFlying();
@@ -284,6 +292,7 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
     private void aquaAcrobatics$stopSprinting(boolean isSaturated) {
         if (this.isSprinting()) {
             boolean isNotMoving = !this.aquaAcrobatics$isMovingForward(this.movementInput.moveForward, this.movementInput.moveStrafe) || !isSaturated;
+            // don't stop sprint flying when breaching water surface
             boolean hasCollided = isNotMoving || this.collidedHorizontally || this.isInWater() && !this.aquaAcrobatics$canSwim() && !this.aquaAcrobatics$movementStorage.isFlying;
             if (((IPlayerResizeable) this).aquaAcrobatics$isSwimming()) {
                 if (!this.movementInput.sneak && isNotMoving || !this.isInWater()) {
@@ -302,16 +311,20 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
 
     @Unique
     private void aquaAcrobatics$handleElytraTakeoff() {
+        // 1.15 change for easier elytra takeoff
         if (aquaAcrobatics$canPerformElytraTakeoff()) {
             ItemStack itemstack = this.getItemStackFromSlot(EntityEquipmentSlot.CHEST);
             if (itemstack.getItem() == Items.ELYTRA && ItemElytra.isUsable(itemstack)) {
                 this.connection.sendPacket(new CPacketEntityAction(this, CPacketEntityAction.Action.START_FALL_FLYING));
+            } else {
+                IntegrationManager.elytraOpenHooks.forEach(hook -> hook.openElytra((EntityPlayerSP) (Object) this));
             }
         }
     }
 
     @Unique
     private void aquaAcrobatics$handleWaterSneaking() {
+        // needs to be handled on the client since the server doesn't receive actual sneak state while in water
         if (this.isInWater() && this.movementInput.sneak && !this.capabilities.isFlying) {
             this.aquaAcrobatics$handleSneakWater();
         }
@@ -321,6 +334,7 @@ public abstract class EntityPlayerSPMixin extends AbstractClientPlayer implement
     private void aquaAcrobatics$slowDownSneakFlying() {
         if (this.capabilities.isFlying && this.isCurrentViewEntity()) {
             if (this.movementInput.sneak) {
+                // normally used to counter sneaking slowdown when flying, but sneaking is no longer activated while flying now
                 this.movementInput.moveStrafe = (float) ((double) this.movementInput.moveStrafe * 0.3);
                 this.movementInput.moveForward = (float) ((double) this.movementInput.moveForward * 0.3);
             }

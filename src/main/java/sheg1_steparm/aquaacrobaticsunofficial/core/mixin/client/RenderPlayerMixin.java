@@ -13,6 +13,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import sheg1_steparm.aquaacrobaticsunofficial.client.model.IModelBipedSwimming;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.player.IPlayerResizeable;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.IntegrationManager;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.mobends.MoBendsIntegration;
 import sheg1_steparm.aquaacrobaticsunofficial.util.math.MathHelperNew;
 
 @Mixin(RenderPlayer.class)
@@ -36,13 +38,19 @@ public abstract class RenderPlayerMixin extends RenderLivingBase<AbstractClientP
     @Inject(method = "applyRotations*", at = @At("TAIL"))
     protected void applyRotations(AbstractClientPlayer entityLiving, float p_77043_2_, float rotationYaw, float partialTicks, CallbackInfo callbackInfo) {
         if (!entityLiving.isElytraFlying()) {
-            float f = ((IPlayerResizeable) entityLiving).aquaAcrobatics$getSwimAnimation(partialTicks);
-            float f3 = entityLiving.isInWater() ? -90.0F - entityLiving.rotationPitch : -90.0F;
-            float f4 = MathHelperNew.lerp(f, 0.0F, f3);
-            GlStateManager.rotate(f4, 1.0F, 0.0F, 0.0F);
+            if (!IntegrationManager.isMoBendsEnabled()) {
+                float f = ((IPlayerResizeable) entityLiving).aquaAcrobatics$getSwimAnimation(partialTicks);
+                float f3 = entityLiving.isInWater() ? -90.0F - entityLiving.rotationPitch : -90.0F;
+                float f4 = MathHelperNew.lerp(f, 0.0F, f3);
+                GlStateManager.rotate(f4, 1.0F, 0.0F, 0.0F);
+            }
 
             if (((IPlayerResizeable) entityLiving).aquaAcrobatics$isActuallySwimming()) {
-                GlStateManager.translate(0.0F, -1.0F, 0.3F);
+                if (!IntegrationManager.isMoBendsEnabled()) {
+                    GlStateManager.translate(0.0F, -1.0F, 0.3F);
+                } else {
+                    MoBendsIntegration.applyRotations((RenderPlayer) (Object) this, entityLiving);
+                }
             }
         }
     }

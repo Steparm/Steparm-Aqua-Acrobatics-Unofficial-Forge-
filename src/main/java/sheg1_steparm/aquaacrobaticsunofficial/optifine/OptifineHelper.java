@@ -49,6 +49,10 @@ public class OptifineHelper {
 
     /**
      * Rewrite an OptiFine shader block alias to use the same metadata filters but a different main block ID.
+     *
+     * @param mainId     the replacement main block ID
+     * @param blockAlias the OptiFine block alias to rewrite
+     * @return the rewritten block alias, or the original alias if rewriting fails
      */
     public static Object rewriteBlockAliasForNewId(int mainId, Object blockAlias) {
         if (blockAlias == null) {

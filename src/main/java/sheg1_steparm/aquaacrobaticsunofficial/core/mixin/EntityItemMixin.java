@@ -12,7 +12,12 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import sheg1_steparm.aquaacrobaticsunofficial.config.ConfigHandler;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.IntegrationManager;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.ae2.AE2Integration;
 
+/**
+ * Allows items to float like post-1.13.
+ */
 @Mixin(EntityItem.class)
 public abstract class EntityItemMixin extends Entity {
     public EntityItemMixin(World p_i1582_1_) {
@@ -30,7 +35,10 @@ public abstract class EntityItemMixin extends Entity {
 
     @Unique
     private boolean aqua$shouldBeBuoyant() {
-        return ConfigHandler.MISCELLANEOUS_CONFIG.floatingItems;
+        if (!ConfigHandler.MISCELLANEOUS_CONFIG.floatingItems) {
+            return false;
+        }
+        return !IntegrationManager.isAE2Enabled() || !AE2Integration.isGrowingCrystal((EntityItem) (Object) this);
     }
 
     @Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/item/EntityItem;hasNoGravity()Z", ordinal = 0), require = 0)

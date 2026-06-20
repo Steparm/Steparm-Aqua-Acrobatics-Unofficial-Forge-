@@ -40,5 +40,4 @@ public abstract class BlockMagmaMixin extends Block {
     public void updateTick(@Nonnull World worldIn, BlockPos pos, @Nonnull IBlockState state, @Nonnull Random rand) {
         BlockBubbleColumn.placeBubbleColumn(worldIn, pos.up(), false);
     }
-
 }

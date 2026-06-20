@@ -1,6 +1,5 @@
 package sheg1_steparm.aquaacrobaticsunofficial.entity;
 
-@SuppressWarnings("unused")
 public class EntitySize {
     public final float width;
     public final float height;
@@ -12,20 +11,20 @@ public class EntitySize {
         this.fixed = fixedIn;
     }
 
-    public EntitySize scale(float factor) {
-        return this.scale(factor, factor);
-    }
-
-    public EntitySize scale(float widthFactor, float heightFactor) {
-        return !this.fixed && (widthFactor != 1.0F || heightFactor != 1.0F) ? flexible(this.width * widthFactor, this.height * heightFactor) : this;
-    }
-
     public static EntitySize flexible(float widthIn, float heightIn) {
         return new EntitySize(widthIn, heightIn, false);
     }
 
     public static EntitySize fixed(float widthIn, float heightIn) {
         return new EntitySize(widthIn, heightIn, true);
+    }
+
+    public EntitySize scale(float factor) {
+        return this.scale(factor, factor);
+    }
+
+    public EntitySize scale(float widthFactor, float heightFactor) {
+        return !this.fixed && (widthFactor != 1.0F || heightFactor != 1.0F) ? flexible(this.width * widthFactor, this.height * heightFactor) : this;
     }
 
     @Override

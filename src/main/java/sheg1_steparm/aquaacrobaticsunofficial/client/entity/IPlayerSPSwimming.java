@@ -1,7 +1,6 @@
 package sheg1_steparm.aquaacrobaticsunofficial.client.entity;
 
 public interface IPlayerSPSwimming {
-
     boolean aquaAcrobatics$isActuallySneaking();
 
     boolean aquaAcrobatics$isForcedDown();
@@ -15,5 +14,4 @@ public interface IPlayerSPSwimming {
     boolean aquaAcrobatics$isMovingForward(float moveForward, float moveStrafe);
 
     boolean aquaAcrobatics$canPerformElytraTakeoff();
-
 }

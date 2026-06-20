@@ -19,8 +19,7 @@ public class MinimapWriterMixin {
         Block block = state.getBlock();
         if (ConfigHandler.BLOCKS_CONFIG.newWaterColors && (block == Blocks.WATER || block == Blocks.FLOWING_WATER)) {
             return FMLClientHandler.instance().getClient().getTextureMapBlocks().getAtlasSprite("aquaacrobaticsunofficial:blocks/water_still");
-        }
-        else {
+        } else {
             return instance.getTexture(state);
         }
     }

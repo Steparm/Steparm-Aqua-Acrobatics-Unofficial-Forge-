@@ -20,7 +20,7 @@ public abstract class GCEntityClientPlayerMPMixin extends EntityPlayerSP {
     }
 
     @Inject(method = "getEyeHeight", at = @At("HEAD"), cancellable = true)
-    private void aquaAcrobatics$getEyeHeight(CallbackInfoReturnable<Float> cir) {
+    private void getEyeHeight(CallbackInfoReturnable<Float> cir) {
         if (this.isPlayerSleeping()) {
             cir.setReturnValue(0.2F);
             return;

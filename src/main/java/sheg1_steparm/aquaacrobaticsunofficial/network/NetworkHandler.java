@@ -6,9 +6,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import sheg1_steparm.aquaacrobaticsunofficial.network.message.PacketSendKey;
 
 public class NetworkHandler {
-    private static int packetId = 0;
-
     public static SimpleNetworkWrapper INSTANCE = null;
+    private static int packetId = 0;
 
     public NetworkHandler() {
     }

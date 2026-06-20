@@ -36,6 +36,14 @@ import sheg1_steparm.aquaacrobaticsunofficial.config.ConfigHandler;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.EntitySize;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.Pose;
 import sheg1_steparm.aquaacrobaticsunofficial.entity.player.IPlayerResizeable;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.IntegrationManager;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.artemislib.ArtemisLibIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.betweenlands.BetweenlandsIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.chiseledme.ChiseledMeIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.morph.MorphIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.trinketsandbaubles.TrinketsAndBaublesIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.wings.WingsIntegration;
+import sheg1_steparm.aquaacrobaticsunofficial.integration.witchery.WitcheryResurrectedIntegration;
 import sheg1_steparm.aquaacrobaticsunofficial.network.datasync.PoseSerializer;
 import sheg1_steparm.aquaacrobaticsunofficial.util.math.MathHelperNew;
 
@@ -44,7 +52,6 @@ import java.util.Map;
 
 @Mixin(EntityPlayer.class)
 public abstract class EntityPlayerMixin extends EntityLivingBase implements IPlayerResizeable {
-
     @Unique
     private static final EntitySize STANDING_SIZE = EntitySize.flexible(0.6F, 1.8F);
     @Unique
@@ -53,7 +60,6 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
     private static final DataParameter<Pose> aquaAcrobatics$POSE = EntityDataManager.createKey(EntityPlayerMixin.class, PoseSerializer.POSE);
     @Unique
     private static final DataParameter<Boolean> TOGGLED_CRAWLING = EntityDataManager.createKey(EntityPlayerMixin.class, DataSerializers.BOOLEAN);
-
     @Shadow
     public PlayerCapabilities capabilities;
     @Shadow
@@ -62,13 +68,13 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
     public float cameraYaw;
     @Shadow(remap = false)
     public float eyeHeight;
-
     @Unique
     protected boolean aquaAcrobatics$eyesInWater;
     @Unique
     protected boolean aquaAcrobatics$eyesInWaterPlayer;
     @Unique
     private EntitySize aquaAcrobatics$size;
+    // Forge adds an eyeHeight field, we need a different name
     @Unique
     private float aquaAcrobatics$playerEyeHeight;
     @Unique
@@ -79,14 +85,45 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
     private float aquaAcrobatics$lastSwimAnimation;
     @Unique
     private float aquaAcrobatics$timeUnderwater;
+    @Unique
+    private boolean aquaAcrobatics$inBubbleColumn;
 
     public EntityPlayerMixin(World worldIn) {
         super(worldIn);
     }
 
     @Unique
+    private float aquaAcrobatics$findEntitySizeScaleFactor() {
+        float finalFactor = 1f;
+        if (IntegrationManager.isTrinketsAndBaublesEnabled()) {
+            finalFactor *= TrinketsAndBaublesIntegration.getResizeFactor((EntityPlayer) (Object) this);
+        }
+        if (IntegrationManager.isChiseledMeEnabled()) {
+            finalFactor *= ChiseledMeIntegration.getResizeFactor((EntityPlayer) (Object) this);
+        }
+        return finalFactor;
+    }
+
+    @Unique
+    private float aquaAcrobatics$findEyeScaleFactor() {
+        float finalFactor = 1f;
+        if (IntegrationManager.isArtemisLibEnabled()) {
+            finalFactor *= ArtemisLibIntegration.getEyeFactor((EntityPlayer) (Object) this);
+        }
+        if (IntegrationManager.isChiseledMeEnabled()) {
+            finalFactor *= ChiseledMeIntegration.getResizeFactor((EntityPlayer) (Object) this);
+        }
+        return finalFactor;
+    }
+
+    @Unique
     private EntitySize aquaAcrobatics$handleEntitySizeScaling(EntitySize in) {
-        return in;
+        float finalFactor = aquaAcrobatics$findEntitySizeScaleFactor();
+        if (finalFactor == 1f) {
+            return in;
+        } else {
+            return in.scale(finalFactor);
+        }
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -104,24 +141,34 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
         if (aquaAcrobatics$POSE.equals(key)) {
             this.aquaAcrobatics$recalculateEyeHeight();
             this.aquaAcrobatics$recalculateSize();
+            if (IntegrationManager.isArtemisLibEnabled()) {
+                ArtemisLibIntegration.updateSwimmingSize(this.aquaAcrobatics$getPlayer(), this.aquaAcrobatics$getPose());
+            }
         }
+
         super.notifyDataManagerChange(key);
     }
 
     @Override
     public void onEntityUpdate() {
         super.onEntityUpdate();
-        if (this.isInWater()) {
+        if (IntegrationManager.isWitcheryResurrectedEnabled() && WitcheryResurrectedIntegration.HAS_TRANSFORMED) {
+            // A bit buggy, think some packages are not sent from Witchery. Sneaking updates the camera though.
+            this.aquaAcrobatics$playerEyeHeight = this.aquaAcrobatics$getEyeHeight(Pose.STANDING, this.aquaAcrobatics$size);
+            WitcheryResurrectedIntegration.HAS_TRANSFORMED = false;
+        } else if (this.isInWater()) {
             int i = this.isSpectator() ? 10 : 1;
             this.aquaAcrobatics$timeUnderwater = MathHelper.clamp(this.aquaAcrobatics$timeUnderwater + i, 0, 600);
         } else if (this.aquaAcrobatics$timeUnderwater > 0) {
             this.aquaAcrobatics$timeUnderwater = MathHelper.clamp(this.aquaAcrobatics$timeUnderwater - 10, 0, 600);
         }
 
+        // updateAquatics
         this.aquaAcrobatics$updateEyesInWater();
         this.aquaAcrobatics$updateSwimming();
     }
 
+    // based on 1.16
     @Override
     public float aquaAcrobatics$getWaterVision() {
         if (!this.isInWater()) {
@@ -149,8 +196,9 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
 
     @Override
     public void aquaAcrobatics$setForcingCrawling(boolean flag) {
-        if (!this.aquaAcrobatics$canForceCrawling())
+        if (!this.aquaAcrobatics$canForceCrawling()) {
             return;
+        }
         this.dataManager.set(TOGGLED_CRAWLING, flag);
     }
 
@@ -176,8 +224,10 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
     }
 
     @Unique
-    protected void aquaAcrobatics$updateEyesInWaterPlayer() {
+    @SuppressWarnings("UnusedReturnValue")
+    protected boolean aquaAcrobatics$updateEyesInWaterPlayer() {
         this.aquaAcrobatics$eyesInWaterPlayer = this.isInsideOfMaterial(Material.WATER);
+        return this.aquaAcrobatics$eyesInWaterPlayer;
     }
 
     @Override
@@ -197,7 +247,7 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
 
     @Override
     public EntitySize aquaAcrobatics$getSize(Pose poseIn) {
-        return SIZE_BY_POSE.getOrDefault(poseIn, STANDING_SIZE);
+        return aquaAcrobatics$handleEntitySizeScaling(SIZE_BY_POSE.getOrDefault(poseIn, STANDING_SIZE));
     }
 
     @Override
@@ -207,9 +257,12 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
         EntitySize newSize = this.aquaAcrobatics$getSize(pose);
         if (this.aquaAcrobatics$isResizingAllowed()) {
             this.aquaAcrobatics$recalculateSize(oldSize, newSize);
+            // don't forget to update those
             this.width = newSize.width;
             this.height = newSize.height;
         }
+
+        // update after calling #isResizingAllowed
         this.aquaAcrobatics$size = newSize;
     }
 
@@ -238,8 +291,15 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
 
     @Override
     public boolean aquaAcrobatics$isResizingAllowed() {
+
+        if (IntegrationManager.isMorphEnabled() && MorphIntegration.isMorphing(this.aquaAcrobatics$getPlayer())) {
+            return false;
+        }
+
+        // is another mod interfering
         final float delta = 0.025F;
         AxisAlignedBB bb = this.getEntityBoundingBox();
+        // something is not right
         if (this.width < delta || this.height < delta || bb.maxX - bb.minX < delta || bb.maxY - bb.minY < delta) {
             return true;
         }
@@ -251,6 +311,13 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
 
     @Unique
     protected float aquaAcrobatics$getEyeHeight(Pose poseIn, EntitySize sizeIn) {
+        if (IntegrationManager.isWitcheryResurrectedEnabled()) {
+            switch (WitcheryResurrectedIntegration.getCurrentTransformation()) {
+                case BAT:
+                case WOLF:
+                    return 0.5f;
+            }
+        }
         return poseIn == Pose.SLEEPING || poseIn == Pose.DYING ? 0.2F : this.aquaAcrobatics$getStandingEyeHeight(poseIn, sizeIn);
     }
 
@@ -267,29 +334,20 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
             case SPIN_ATTACK:
                 return 0.4F;
             case CROUCHING:
+                // far less than in vanilla 1.12, so better treat mods differently
                 return this.eyeHeight - (this.aquaAcrobatics$isResizingAllowed() ? 0.35F : 0.08F);
             default:
                 return this.eyeHeight;
         }
     }
 
-    @Override
-    public float aquaAcrobatics$getPlayerEyeHeight() {
-        return this.aquaAcrobatics$playerEyeHeight;
-    }
-
     @Inject(method = "getEyeHeight", at = @At("HEAD"), cancellable = true)
     public final void getEyeHeight(CallbackInfoReturnable<Float> callbackInfoReturnable) {
-        callbackInfoReturnable.setReturnValue(this.aquaAcrobatics$playerEyeHeight);
+        callbackInfoReturnable.setReturnValue(this.aquaAcrobatics$playerEyeHeight * aquaAcrobatics$findEyeScaleFactor());
     }
 
     @Shadow
     public abstract boolean isSpectator();
-
-    @Override
-    public void aquaAcrobatics$setPose(Pose poseIn) {
-        this.dataManager.set(aquaAcrobatics$POSE, poseIn);
-    }
 
     @Override
     public Pose aquaAcrobatics$getPose() {
@@ -297,13 +355,22 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
     }
 
     @Override
+    public void aquaAcrobatics$setPose(Pose poseIn) {
+        this.dataManager.set(aquaAcrobatics$POSE, poseIn);
+    }
+
+    @Override
     public boolean aquaAcrobatics$isPoseClear(Pose poseIn) {
+        if (poseIn == Pose.CROUCHING && IntegrationManager.isBetweenlandsEnabled() && BetweenlandsIntegration.couldPlayerPhase((EntityPlayer) (Object) this)) {
+            return true;
+        }
         return this.world.getCollisionBoxes(this, this.aquaAcrobatics$getBoundingBox(poseIn)).isEmpty();
     }
 
     @SideOnly(Side.CLIENT)
     @Override
     public void preparePlayerToSpawn() {
+        // need to overwrite whole method due to this being client exclusive
         this.aquaAcrobatics$setPose(Pose.STANDING);
         super.preparePlayerToSpawn();
         this.setHealth(this.getMaxHealth());
@@ -315,23 +382,28 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
         this.aquaAcrobatics$updateSwimAnimation();
         this.aquaAcrobatics$updateEyesInWaterPlayer();
         FMLCommonHandler.instance().onPlayerPostTick(this.aquaAcrobatics$getPlayer());
+        // run after Forge event in case a mod still wants to do changes
         this.aquaAcrobatics$updatePose();
         this.aquaAcrobatics$updateEyeHeight();
+        // cancel vanilla updateSize
         callbackInfo.cancel();
     }
 
     @Unique
     protected void aquaAcrobatics$updatePose() {
         if (this.aquaAcrobatics$getShouldBeDead()) {
+            // this is completely ignored in vanilla
             this.aquaAcrobatics$setPose(Pose.DYING);
         } else if (this.isPlayerSleeping()) {
+            // handle this before swimming pose clear check
             this.aquaAcrobatics$setPose(Pose.SLEEPING);
         } else if (this.aquaAcrobatics$isPoseClear(Pose.SWIMMING)) {
             Pose pose;
-            if (this.isElytraFlying()) {
+            if (IntegrationManager.isWingsEnabled() ? WingsIntegration.onFlightCheck(this.aquaAcrobatics$getPlayer(), this.isElytraFlying()) : this.isElytraFlying()) {
                 pose = Pose.FALL_FLYING;
             } else if (this.aquaAcrobatics$isForcingCrawling() || this.aquaAcrobatics$isSwimming()) {
                 pose = Pose.SWIMMING;
+                // otherwise unable to sneak on client when there is not enough space for the pose, but actual player size is smaller
             } else if (this.aquaAcrobatics$isActuallySneaking() && !this.capabilities.isFlying && (this.onGround || !this.isInWater()) && !this.isOnLadder()) {
                 pose = Pose.CROUCHING;
             } else {
@@ -343,10 +415,11 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
                 if (this.aquaAcrobatics$isPoseClear(Pose.CROUCHING)) {
                     pose1 = Pose.CROUCHING;
                 } else {
-                    if (ConfigHandler.MOVEMENT_CONFIG.enableCrawling)
+                    if (ConfigHandler.MOVEMENT_CONFIG.enableCrawling) {
                         pose1 = Pose.SWIMMING;
-                    else
+                    } else {
                         pose1 = Pose.STANDING;
+                    }
                 }
             } else {
                 pose1 = pose;
@@ -381,20 +454,20 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
     }
 
     @Override
+    public void aquaAcrobatics$setSwimming(boolean flag) {
+        this.setFlag(4, flag);
+    }
+
+    @Override
     public boolean aquaAcrobatics$isActuallySwimming() {
         boolean isFallFlying = !this.isElytraFlying() && this.aquaAcrobatics$getPose() == Pose.FALL_FLYING;
-        return this.aquaAcrobatics$getPose() == Pose.SWIMMING || isFallFlying;
+        return this.aquaAcrobatics$getPose() == Pose.SWIMMING || (IntegrationManager.isWingsEnabled() ? !WingsIntegration.onFlightCheck(this.aquaAcrobatics$getPlayer(), !isFallFlying) : isFallFlying);
     }
 
     @SideOnly(Side.CLIENT)
     @Override
     public boolean aquaAcrobatics$isVisuallySwimming() {
         return this.aquaAcrobatics$isActuallySwimming() && !this.isInWater();
-    }
-
-    @Override
-    public void aquaAcrobatics$setSwimming(boolean flag) {
-        this.setFlag(4, flag);
     }
 
     @Override
@@ -433,6 +506,7 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
             this.jumpMovementFactor = this.capabilities.getFlySpeed() * (float) (this.isSprinting() ? 2 : 1);
         }
 
+        // replaces a section in super method, therefore super is called otherwise
         if (!this.capabilities.isFlying && this.isInWater()) {
             if (this.isServerWorld() || this.canPassengerSteer()) {
                 double d8 = this.posY;
@@ -515,12 +589,14 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
 
     @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/world/World;isRemote:Z", opcode = Opcodes.GETFIELD), cancellable = true, slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayer;playShoulderEntityAmbientSound(Lnet/minecraft/nbt/NBTTagCompound;)V")))
     public void onLivingUpdate(CallbackInfo callbackInfo) {
+        // disable bobbing view when swimming
         float f = 0.0F;
         if (this.onGround && !this.aquaAcrobatics$getShouldBeDead() && !this.aquaAcrobatics$isSwimming()) {
             f = Math.min(0.1F, MathHelper.sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ));
         }
 
         this.cameraYaw = this.prevCameraYaw + (f - this.prevCameraYaw) * 0.4F;
+        // no longer exists in 1.13+
         this.cameraPitch = 0.0F;
 
         if (!ConfigHandler.MISCELLANEOUS_CONFIG.sneakingForParrots) {
@@ -549,6 +625,7 @@ public abstract class EntityPlayerMixin extends EntityLivingBase implements IPla
         this.aquaAcrobatics$setPose(Pose.SLEEPING);
     }
 
+    // removed wakeUpPlayer hook as it's not important and is conflicting with sponge forge (they're using overwrite for that method)
     @Unique
     private EntityPlayer aquaAcrobatics$getPlayer() {
         return (EntityPlayer) (Object) this;

@@ -24,8 +24,7 @@ public class BlockFluidRendererMixin {
     private String getWaterStillTexture(String old) {
         if (ConfigHandler.BLOCKS_CONFIG.newWaterColors) {
             return "aquaacrobaticsunofficial:blocks/water_still";
-        }
-        else {
+        } else {
             return old;
         }
     }
@@ -34,12 +33,10 @@ public class BlockFluidRendererMixin {
     private String getWaterFlowTexture(String old) {
         if (ConfigHandler.BLOCKS_CONFIG.newWaterColors) {
             return "aquaacrobaticsunofficial:blocks/water_flow";
-        }
-        else {
+        } else {
             return old;
-            }
+        }
     }
-
 
     @ModifyArgs(
             method = "renderFluid", at = @At(
@@ -62,6 +59,7 @@ public class BlockFluidRendererMixin {
             args.set(0, f);
             args.set(1, f1);
             args.set(2, f2);
+            args.set(3, 1.0f);
         }
     }
 }

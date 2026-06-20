@@ -58,7 +58,8 @@ public class AquaAcrobaticsEarlyLoader implements IFMLLoadingPlugin, IEarlyMixin
     }
 
     @Override
-    public void injectData(Map<String, Object> data) {}
+    public void injectData(Map<String, Object> data) {
+    }
 
     @Override
     public String getAccessTransformerClass() {

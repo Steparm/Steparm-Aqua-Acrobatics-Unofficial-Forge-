@@ -16,12 +16,12 @@ import sheg1_steparm.aquaacrobaticsunofficial.config.ConfigHandler;
 
 @Mixin(EntityThrowable.class)
 public abstract class EntityThrowableMixin extends Entity {
+    @Unique
+    private final boolean aqua$isNewProjectile = aqua$checkEntityEligibleForProjectile();
+
     public EntityThrowableMixin(World worldIn) {
         super(worldIn);
     }
-
-    @Unique
-    private final boolean aqua$isNewProjectile = aqua$checkEntityEligibleForProjectile();
 
     @Unique
     private boolean aqua$checkEntityEligibleForProjectile() {
@@ -32,8 +32,7 @@ public abstract class EntityThrowableMixin extends Entity {
     private RayTraceResult rayTraceThroughLiquid(World world, Vec3d start, Vec3d end) {
         if (aqua$isNewProjectile) {
             return world.rayTraceBlocks(start, end, false, true, false);
-        }
-        else {
+        } else {
             return world.rayTraceBlocks(start, end);
         }
     }

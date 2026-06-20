@@ -10,7 +10,7 @@ public class Keybindings {
 
     public static void register() {
         if (ConfigHandler.MOVEMENT_CONFIG.enableToggleCrawling) {
-            forceCrawling = new KeyBinding("key.aquaacrobatics.toggle_crawling", Keyboard.KEY_C, "key.aquaacrobatics.category");
+            forceCrawling = new KeyBinding("key.aquaacrobaticsunofficial.toggle_crawling", Keyboard.KEY_C, "key.aquaacrobaticsunofficial.category");
             ClientRegistry.registerKeyBinding(forceCrawling);
         }
     }

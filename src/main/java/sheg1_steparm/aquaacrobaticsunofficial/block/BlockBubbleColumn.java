@@ -38,29 +38,6 @@ public class BlockBubbleColumn extends BlockStaticLiquid {
         this.setDefaultState(this.blockState.getBaseState().withProperty(LEVEL, 0).withProperty(DRAG, false));
     }
 
-    @Override
-    @Nonnull
-    protected BlockStateContainer createBlockState() {
-        BlockStateContainer.Builder builder = new BlockStateContainer.Builder(this).add(LEVEL, DRAG);
-        if (Loader.isModLoaded("fluidlogged_api")) {
-            builder = builder.add(BlockFluidBase.FLUID_RENDER_PROPS.toArray(new IUnlistedProperty<?>[0]));
-        }
-        return builder.build();
-    }
-
-
-    @Override
-    public void onEntityCollision(World worldIn, BlockPos pos, IBlockState state, @Nonnull Entity entityIn) {
-        IBlockState iblockstate = worldIn.getBlockState(pos.up());
-        IBubbleColumnInteractable bubbleEntity = (IBubbleColumnInteractable) entityIn;
-        boolean downwards = !state.getValue(DRAG);
-        if (iblockstate.getBlock() == Blocks.AIR) {
-            bubbleEntity.aquaAcrobatics$onEnterBubbleColumnWithAirAbove(downwards);
-        } else {
-            bubbleEntity.aquaAcrobatics$onEnterBubbleColumn(downwards);
-        }
-    }
-
     public static void placeBubbleColumn(World world, BlockPos pos, boolean isUpwards) {
         if (!ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns) {
             return;
@@ -82,6 +59,38 @@ public class BlockBubbleColumn extends BlockStaticLiquid {
             return false;
         }
         return self.getValue(LEVEL) == 0;
+    }
+
+    private static boolean getDrag(IBlockAccess p_203157_0_, BlockPos p_203157_1_) {
+        IBlockState iblockstate = p_203157_0_.getBlockState(p_203157_1_);
+        Block block = iblockstate.getBlock();
+        if (block == CommonProxy.BUBBLE_COLUMN) {
+            return iblockstate.getValue(DRAG);
+        } else {
+            return block == Blocks.SOUL_SAND;
+        }
+    }
+
+    @Override
+    @Nonnull
+    protected BlockStateContainer createBlockState() {
+        BlockStateContainer.Builder builder = new BlockStateContainer.Builder(this).add(LEVEL, DRAG);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            builder = builder.add(BlockFluidBase.FLUID_RENDER_PROPS.toArray(new IUnlistedProperty<?>[0]));
+        }
+        return builder.build();
+    }
+
+    @Override
+    public void onEntityCollision(World worldIn, BlockPos pos, IBlockState state, @Nonnull Entity entityIn) {
+        IBlockState iblockstate = worldIn.getBlockState(pos.up());
+        IBubbleColumnInteractable bubbleEntity = (IBubbleColumnInteractable) entityIn;
+        boolean downwards = !state.getValue(DRAG);
+        if (iblockstate.getBlock() == Blocks.AIR) {
+            bubbleEntity.aquaAcrobatics$onEnterBubbleColumnWithAirAbove(downwards);
+        } else {
+            bubbleEntity.aquaAcrobatics$onEnterBubbleColumn(downwards);
+        }
     }
 
     @SideOnly(Side.CLIENT)
@@ -117,17 +126,6 @@ public class BlockBubbleColumn extends BlockStaticLiquid {
         Block block = worldIn.getBlockState(pos.down()).getBlock();
         return block == this || block == (worldIn.getBlockState(pos).getValue(DRAG) ? Blocks.SOUL_SAND : Blocks.MAGMA);
     }
-
-    private static boolean getDrag(IBlockAccess p_203157_0_, BlockPos p_203157_1_) {
-        IBlockState iblockstate = p_203157_0_.getBlockState(p_203157_1_);
-        Block block = iblockstate.getBlock();
-        if (block == CommonProxy.BUBBLE_COLUMN) {
-            return iblockstate.getValue(DRAG);
-        } else {
-            return block == Blocks.SOUL_SAND;
-        }
-    }
-
 
     public void onBlockAdded(@Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
         super.onBlockAdded(worldIn, pos, state);

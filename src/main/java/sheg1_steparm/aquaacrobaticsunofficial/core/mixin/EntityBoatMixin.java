@@ -25,9 +25,9 @@ public abstract class EntityBoatMixin extends Entity implements IBubbleColumnInt
     @Unique
     private static final DataParameter<Integer> BOAT_ROCKING_TICKS = EntityDataManager.createKey(EntityBoatMixin.class, DataSerializers.VARINT);
     @Unique
-    private boolean aqua$rocking;
+    private boolean aquaAcrobatics$rocking;
     @Unique
-    private boolean aqua$rockingDownwards;
+    private boolean aquaAcrobatics$rockingDownwards;
     @Unique
     private float aquaAcrobatics$rockingIntensity;
     @Unique
@@ -41,8 +41,8 @@ public abstract class EntityBoatMixin extends Entity implements IBubbleColumnInt
 
     public void aquaAcrobatics$onEnterBubbleColumnWithAirAbove(boolean downwards) {
         if (!world.isRemote) {
-            this.aqua$rocking = true;
-            this.aqua$rockingDownwards = downwards;
+            this.aquaAcrobatics$rocking = true;
+            this.aquaAcrobatics$rockingDownwards = downwards;
             if (this.aquaAcrobatics$getRockingTicks() == 0) {
                 this.aquaAcrobatics$setRockingTicks(60);
             }
@@ -55,7 +55,7 @@ public abstract class EntityBoatMixin extends Entity implements IBubbleColumnInt
     }
 
     @Override
-    public void aqua$doRegisterData() {
+    public void aquaAcrobatics$doRegisterData() {
         this.dataManager.register(BOAT_ROCKING_TICKS, 0);
     }
 
@@ -73,7 +73,7 @@ public abstract class EntityBoatMixin extends Entity implements IBubbleColumnInt
             this.aquaAcrobatics$prevRockingAngle = this.aquaAcrobatics$rockingAngle;
             this.aquaAcrobatics$rockingAngle = 10.0F * (float) Math.sin(0.5F * (float) this.world.getTotalWorldTime()) * this.aquaAcrobatics$rockingIntensity;
         } else {
-            if (!this.aqua$rocking) {
+            if (!this.aquaAcrobatics$rocking) {
                 this.aquaAcrobatics$setRockingTicks(0);
             }
 
@@ -84,7 +84,7 @@ public abstract class EntityBoatMixin extends Entity implements IBubbleColumnInt
                 int j = 60 - k - 1;
                 if (j > 0 && k == 0) {
                     this.aquaAcrobatics$setRockingTicks(0);
-                    if (this.aqua$rockingDownwards) {
+                    if (this.aquaAcrobatics$rockingDownwards) {
                         this.motionY -= 0.7D;
                         this.removePassengers();
                     } else {
@@ -92,10 +92,9 @@ public abstract class EntityBoatMixin extends Entity implements IBubbleColumnInt
                     }
                 }
 
-                this.aqua$rocking = false;
+                this.aquaAcrobatics$rocking = false;
             }
         }
-
     }
 
     @Unique
@@ -110,24 +109,25 @@ public abstract class EntityBoatMixin extends Entity implements IBubbleColumnInt
     }
 
     @Unique
-    public void aquaAcrobatics$setRockingTicks(int p_203055_1_) {
-        if (!ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns)
-            return;
-        this.dataManager.set(BOAT_ROCKING_TICKS, p_203055_1_);
+    public int aquaAcrobatics$getRockingTicks() {
+        if (!ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns) {
+            return 0;
+        }
+        return this.dataManager.get(BOAT_ROCKING_TICKS);
     }
 
     @Unique
-    public int aquaAcrobatics$getRockingTicks() {
+    public void aquaAcrobatics$setRockingTicks(int value) {
         if (!ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns)
-            return 0;
-        return this.dataManager.get(BOAT_ROCKING_TICKS);
+            return;
+        this.dataManager.set(BOAT_ROCKING_TICKS, value);
     }
 
     @SideOnly(Side.CLIENT)
     public float aquaAcrobatics$getRockingAngle(float partialTicks) {
-        if (!ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns)
+        if (!ConfigHandler.MISCELLANEOUS_CONFIG.bubbleColumns) {
             return 0.0f;
+        }
         return this.aquaAcrobatics$prevRockingAngle + (this.aquaAcrobatics$rockingAngle - this.aquaAcrobatics$prevRockingAngle) * partialTicks;
     }
-
 }

@@ -28,9 +28,9 @@ public interface IPlayerResizeable {
 
     float aquaAcrobatics$getStandingEyeHeight(Pose poseIn, EntitySize sizeIn);
 
-    void aquaAcrobatics$setPose(Pose poseIn);
-
     Pose aquaAcrobatics$getPose();
+
+    void aquaAcrobatics$setPose(Pose poseIn);
 
     boolean aquaAcrobatics$isPoseClear(Pose poseIn);
 
@@ -38,12 +38,12 @@ public interface IPlayerResizeable {
 
     boolean aquaAcrobatics$isSwimming();
 
+    void aquaAcrobatics$setSwimming(boolean flag);
+
     boolean aquaAcrobatics$isActuallySwimming();
 
     @SideOnly(Side.CLIENT)
     boolean aquaAcrobatics$isVisuallySwimming();
-
-    void aquaAcrobatics$setSwimming(boolean flag);
 
     float aquaAcrobatics$getSwimAnimation(float partialTicks);
 
@@ -52,6 +52,4 @@ public interface IPlayerResizeable {
     boolean aquaAcrobatics$isForcingCrawling();
 
     void aquaAcrobatics$setForcingCrawling(boolean flag);
-
-    float aquaAcrobatics$getPlayerEyeHeight();
 }

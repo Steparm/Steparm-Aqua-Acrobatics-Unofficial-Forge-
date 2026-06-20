@@ -12,8 +12,7 @@ public abstract class ItemRendererMixin {
     private float replaceOpacity(float originalOpacity) {
         if (ConfigHandler.BLOCKS_CONFIG.newWaterColors) {
             return 0.1f;
-        }
-        else {
+        } else {
             return originalOpacity;
         }
     }

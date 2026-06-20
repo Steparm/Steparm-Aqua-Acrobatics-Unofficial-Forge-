@@ -1,12 +1,11 @@
 {
   "required": true,
-  "minVersion": "0.7",
+  "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
   "package": "sheg1_steparm.aquaacrobaticsunofficial.core.mixin",
   "refmap": "mixins.aquaacrobaticsunofficial.refmap.json",
   "plugin": "sheg1_steparm.aquaacrobaticsunofficial.core.AquaAcrobaticsMixinPlugin",
   "mixins": [
-    "BiomeColorHelperMixin",
     "BiomeMixin",
     "BlockGrassMixin",
     "BlockLiquidMixin",
@@ -26,6 +25,7 @@
     "client.BlockAliasesBubbleColumnMixin"
   ],
   "client": [
+    "client.BiomeColorHelperMixin",
     "client.BlockFluidRendererMixin",
     "client.EntityPlayerSPMixin",
     "client.EntityRendererMixin",
@@ -34,6 +34,7 @@
     "client.ModelFluidMixin",
     "client.PlayerControllerMPMixin",
     "client.RenderBoatMixin",
+    "client.RenderGlobalMixin",
     "client.RenderPlayerMixin"
   ],
   "injectors": {
