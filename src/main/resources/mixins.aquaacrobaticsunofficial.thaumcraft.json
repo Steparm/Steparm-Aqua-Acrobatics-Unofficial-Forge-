@@ -1,0 +1,14 @@
+{
+  "package": "sheg1_steparm.aquaacrobaticsunofficial.core.thaumcraft",
+  "required": true,
+  "refmap": "mixins.aquaacrobaticsunofficial.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8.5",
+  "compatibilityLevel": "JAVA_8",
+  "plugin": "sheg1_steparm.aquaacrobaticsunofficial.core.AquaAcrobaticsMixinPlugin",
+  "mixins": [],
+  "server": [],
+  "client": [
+    "TileCrucibleRendererMixin"
+  ]
+}

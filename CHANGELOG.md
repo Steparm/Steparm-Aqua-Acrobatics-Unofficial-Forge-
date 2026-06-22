@@ -1,39 +1,20 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog].
+## [1.16.2] - 2026-06-19
 
-## [v1.15.4-1.12.2] - 2024-03-31
-### Fixed
-- Furniture Mod mirror rendering one block too high
-- New projectile behavior breaking gameplay mechanics from some mods with custom projectiles
 
-## [v1.15.2-1.12.2] - 2023-02-11
-### Fixed
-- Crash with Trinkets & Baubles
-- Removed redundant Dynamic Trees fix
+## [1.16.1] - 2026-06-13
 
-## [v1.15.1-1.12.2] - 2022-12-18
-### Fixed
-- Gray water in Thaumcraft crucibles
+#### Fixed
 
-## [v1.15.0-1.12.2] - 2022-09-05
-### Added
-- Parity for growing AE2 crystals' buoyancy with newer versions
-- Config option to disable item buoyancy
+• Fixed a visual error that occurred while the player was underwater.
 
-## [v1.14.5-1.12.2] - 2022-09-04
-### Fixed
-- Fixed items launching themselves out of water when floating
+• Fixed camera conflict with Aqua Acrobatics Unofficial mod when using MC4's Spider Ball.
 
-## [v1.14.4-1.12.2] - 2022-08-06
-### Fixed
-- Fixed incorrect water fog color for BOP bayou
+~• Fixed a rendering issue while swimming, where a semi-transparent block would appear right in the center of the player's view when looking up at the water surface from underwater.~ (Change cancelled, as it was not fixed)
 
-## [v1.14.3-1.12.2] - 2022-07-26
-### Added
-- Added support for automatically uploading new builds to CurseForge using CurseGradle
-### Fixed
-- Fixed compat with RenderPlayerAPI and Player API mods
+• Fixed a MixinInitialisationError ('mixins.aquaacrobaticsunofficial.json' was invalid or could not be read).
 
-[Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
+#### Added
+
+• Added compatibility with mods. In version 1.16.0, they were temporarily removed due to various issues.
