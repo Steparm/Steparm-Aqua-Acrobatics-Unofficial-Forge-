@@ -1,0 +1,15 @@
+{
+  "package": "sheg1_steparm.aquaacrobaticsunofficial.core.galacticraft",
+  "required": true,
+  "refmap": "mixins.aquaacrobaticsunofficial.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8.5",
+  "compatibilityLevel": "JAVA_8",
+  "plugin": "sheg1_steparm.aquaacrobaticsunofficial.core.AquaAcrobaticsMixinPlugin",
+  "mixins": [
+    "GCEntityClientPlayerMPMixin",
+    "GalacticraftCoreMixin"
+  ],
+  "server": [],
+  "client": []
+}
